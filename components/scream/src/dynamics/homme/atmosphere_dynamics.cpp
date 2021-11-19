@@ -319,6 +319,9 @@ void HommeDynamics::initialize_impl ()
 
 void HommeDynamics::run_impl (const int dt)
 {
+  // Start timer
+  auto start = std::chrono::steady_clock::now();
+
   try {
     // Prepare inputs for homme
     Kokkos::fence();
@@ -340,6 +343,19 @@ void HommeDynamics::run_impl (const int dt)
   } catch (...) {
     EKAT_ERROR_MSG("Something went wrong, but we don't know what.\n");
   }
+
+  // Stop timer
+  auto finish = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+  const double report_time = 1e-6*duration.count();
+
+  // Compute "Thousands of columns per second"
+  const int ncols = m_ref_grid->get_num_local_dofs();
+  const double thousand_cols_per_sec = (ncols/1000.0)/report_time;
+
+  // Print timing
+  std::cout << this->name() << ", ncols=" << ncols << ":  Time = " << report_time
+            << "        " << "ncol/1000/sec = " << thousand_cols_per_sec << std::endl;
 }
 
 void HommeDynamics::finalize_impl (/* what inputs? */)

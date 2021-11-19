@@ -4,6 +4,9 @@ namespace scream {
 
 void P3Microphysics::run_impl (const int dt)
 {
+  // Start timer
+  auto start = std::chrono::steady_clock::now();
+
   // Assign values to local arrays used by P3, these are now stored in p3_loc.
   Kokkos::parallel_for(
     "p3_main_local_vals",
@@ -33,6 +36,19 @@ void P3Microphysics::run_impl (const int dt)
     p3_postproc
   ); // Kokkos::parallel_for(p3_main_local_vals)
   Kokkos::fence();
+
+  // Stop timer
+  auto finish = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+  const double report_time = 1e-6*duration.count();
+
+  // Compute "Thousands of columns per second"
+  const int ncols = m_num_cols;
+  const double thousand_cols_per_sec = (ncols/1000.0)/report_time;
+
+  // Print timing
+  std::cout << this->name() << ", ncols=" << ncols << ":  Time = " << report_time
+            << "        " << "ncol/1000/sec = " << thousand_cols_per_sec << std::endl;
 }
 
 } // namespace scream

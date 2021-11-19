@@ -63,6 +63,9 @@ void CldFraction::initialize_impl ()
 // =========================================================================================
 void CldFraction::run_impl (const int dt)
 {
+  // Start timer
+  auto start = std::chrono::steady_clock::now();
+
   // Calculate ice cloud fraction and total cloud fraction given the liquid cloud fraction
   // and the ice mass mixing ratio. 
   auto qi   = get_field_in("qi").get_view<const Pack**>();
@@ -71,6 +74,19 @@ void CldFraction::run_impl (const int dt)
   auto tot_cld_frac = get_field_out("cldfrac_tot").get_view<Pack**>();
 
   CldFractionFunc::main(m_num_cols,m_num_levs,qi,liq_cld_frac,ice_cld_frac,tot_cld_frac);
+
+  // Stop timer
+  auto finish = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+  const double report_time = 1e-6*duration.count();
+
+  // Compute "Thousands of columns per second"
+  const int ncols = m_num_cols;
+  const double thousand_cols_per_sec = (ncols/1000.0)/report_time;
+
+  // Print timing
+  std::cout << this->name() << ", ncols=" << ncols << ":  Time = " << report_time
+            << "        " << "ncol/1000/sec = " << thousand_cols_per_sec << std::endl;
 }
 
 // =========================================================================================

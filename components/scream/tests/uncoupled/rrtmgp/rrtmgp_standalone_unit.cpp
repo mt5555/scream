@@ -311,8 +311,22 @@ namespace scream {
         }
         Kokkos::fence();
 
+        // Start timer
+        auto start = std::chrono::steady_clock::now();
         // Run driver
         ad.run(300);
+        // Stop timer
+        auto finish = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+        const double report_time = 1e-6*duration.count();
+
+        // Compute "Thousands of columns per second"
+        const double thousand_cols_per_sec = (ncol/1000.0)/report_time;
+
+        // Print timing
+        std::cout << "ncols=" << ncol << ":  OVERALL Time = " << report_time
+                  << "        " << "ncol/1000/sec = " << thousand_cols_per_sec << std::endl;
+
 
         // Check values; The correct values have been stored in the field manager, we need to
         // copy back to YAKL::Array.

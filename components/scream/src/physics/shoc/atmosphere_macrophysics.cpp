@@ -357,6 +357,9 @@ void SHOCMacrophysics::initialize_impl ()
 // =========================================================================================
 void SHOCMacrophysics::run_impl (const int dt)
 {
+  // Start timer
+  auto start = std::chrono::steady_clock::now();
+
   const auto nlev_packs  = ekat::npack<Spack>(m_num_levs);
   const auto nlevi_packs = ekat::npack<Spack>(m_num_levs+1);
 
@@ -397,6 +400,19 @@ void SHOCMacrophysics::run_impl (const int dt)
                        default_policy,
                        shoc_postprocess);
   Kokkos::fence();
+
+  // Stop timer
+  auto finish = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+  const double report_time = 1e-6*duration.count();
+
+  // Compute "Thousands of columns per second"
+  const int ncols = m_num_cols;
+  const double thousand_cols_per_sec = (ncols/1000.0)/report_time;
+
+  // Print timing
+  std::cout << this->name() << ", ncols=" << ncols << ":  Time = " << report_time
+            << "        " << "ncol/1000/sec = " << thousand_cols_per_sec << std::endl;
 }
 // =========================================================================================
 void SHOCMacrophysics::finalize_impl()

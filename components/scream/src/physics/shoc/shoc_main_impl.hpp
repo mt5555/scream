@@ -302,6 +302,11 @@ Int Functions<S,D>::shoc_main(
   const SHOCOutput&        shoc_output,         // Output
   const SHOCHistoryOutput& shoc_history_output) // Output (diagnostic)
 {
+
+  std::cout << "nadv: " << nadv
+            << "nq:   " << num_qtracers
+            << std::endl;
+
   using ExeSpace = typename KT::ExeSpace;
 
   // Start timer

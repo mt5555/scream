@@ -159,8 +159,10 @@ struct Baseline {
 
       if (ps.repeat > 0) {
         const double report_time = (1e-6*total_duration_microsec) / ps.repeat;
+        const double thousand_cols_per_sec = (ps.ncol/1000.0)/report_time;
 
         printf("Time = %1.3e seconds\n", report_time);
+        printf("(ncol/1000)/sec = %1.3e\n", thousand_cols_per_sec);
       }
     }
     return nerr;

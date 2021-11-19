@@ -52,6 +52,10 @@ TEST_CASE("rrtmgp-stand-alone", "") {
   if (atm_comm.am_i_root()) {
     printf("Start time stepping loop...       [  0%%]\n");
   }
+
+  // Start timer
+  auto start = std::chrono::steady_clock::now();
+
   for (int i=0; i<nsteps; ++i) {
     ad.run(dt);
     if (atm_comm.am_i_root()) {
@@ -59,6 +63,20 @@ TEST_CASE("rrtmgp-stand-alone", "") {
       std::cout << "       [" << std::setfill(' ') << std::setw(3) << 100*(i+1)/nsteps << "%]\n";
     }
   }
+
+  // Stop timer
+  auto finish = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+  const double report_time = 1e-6*duration.count();
+
+  // Compute "Thousands of columns per second"
+  auto& mesh = ad_params.sublist("Grids Manager").sublist("Mesh Free");
+  const int ncols = mesh.get<int>("Number of Global Columns");
+  const double thousand_cols_per_sec = (ncols/1000.0)/report_time;
+
+  // Print timing
+  std::cout << "ncols=" << ncols << ": Time = " << report_time
+            << "        " << "ncol/1000/sec = " << thousand_cols_per_sec << std::endl;
 
   // TODO: get the field repo from the driver, and go get (one of)
   //       the output(s) of SHOC, to check its numerical value (if possible)

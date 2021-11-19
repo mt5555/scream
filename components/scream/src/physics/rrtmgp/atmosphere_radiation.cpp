@@ -210,6 +210,10 @@ void RRTMGPRadiation::initialize_impl() {
 // =========================================================================================
 
 void RRTMGPRadiation::run_impl (const int dt) {
+
+//  // Start timer
+//  auto start_overall = std::chrono::steady_clock::now();
+
   using PF = scream::PhysicsFunctions<DefaultDevice>;
   using PC = scream::physics::Constants<Real>;
   using CO = scream::ColumnOps<DefaultDevice,Real>;
@@ -415,6 +419,9 @@ void RRTMGPRadiation::run_impl (const int dt) {
     sfc_alb_dif_vis, sfc_alb_dif_nir,
     sfc_alb_dir, sfc_alb_dif);
 
+//  // Start timer
+//  auto start = std::chrono::steady_clock::now();
+
   // Run RRTMGP driver
   rrtmgp::rrtmgp_main(
     m_ncol, m_nlay,
@@ -425,6 +432,15 @@ void RRTMGPRadiation::run_impl (const int dt) {
     sw_flux_up, sw_flux_dn, sw_flux_dn_dir,
     lw_flux_up, lw_flux_dn, get_comm().am_i_root()
   );
+
+//  // Stop timer
+//  auto finish = std::chrono::steady_clock::now();
+//  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+//  const double report_time = 1e-6*duration.count();
+
+//  // Compute "Thousands of columns per second"
+//  const int ncols = m_ncol;
+//  const double thousand_cols_per_sec = (ncols/1000.0)/report_time;
 
   // Compute and apply heating rates
   auto sw_heating  = m_buffer.sw_heating;
@@ -466,6 +482,15 @@ void RRTMGPRadiation::run_impl (const int dt) {
       });
     });
   }
+
+//  // Stop timer
+//  auto finish_o = std::chrono::steady_clock::now();
+//  auto duration_o = std::chrono::duration_cast<std::chrono::microseconds>(finish_o - start_overall);
+//  const double report_time_o = 1e-6*duration_o.count();
+
+//  // Print timing
+//  std::cout << this->name() << ", ncols=" << ncols << ": MAIN Time = " << report_time << "    Overall = " << report_time_o
+//            << "        " << "ncol/1000/sec = " << thousand_cols_per_sec << std::endl;
 }
 // =========================================================================================
 
