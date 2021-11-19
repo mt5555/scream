@@ -275,6 +275,27 @@ void P3Microphysics::initialize_impl ()
 // =========================================================================================
 void P3Microphysics::finalize_impl()
 {
+  EKAT_ASSERT_MSG(run_impl_times.size() == p3_main_times.size(), "Error!: time: main sizes aren't consistent.");
+  EKAT_ASSERT_MSG(run_impl_times.size() == wsm_times.size(), "Error!: time: wsm sizes aren't consistent.");
+
+  double total_run_time(0), total_p3_main_time(0), total_wsm_time(0);
+    for (int r=0; r<run_impl_times.size(); ++r) {
+    total_run_time += run_impl_times[r];
+    total_p3_main_time += p3_main_times[r];
+    total_wsm_time += wsm_times[r];
+  }
+
+  double max_run, max_p3_main, max_wsm;
+  get_comm().all_reduce(&total_run_time,&max_run,1,MPI_MAX);
+  get_comm().all_reduce(&total_p3_main_time,&max_p3_main,1,MPI_MAX);
+  get_comm().all_reduce(&total_wsm_time,&max_wsm,1,MPI_MAX);
+
+  if (get_comm().am_i_root()) {
+      std::cout << name()+"-run-time: runimpl: " << max_run
+                << " : wsm: " << max_wsm
+                << " : p3main: " << max_p3_main
+                << std::endl;
+  }
   // Do nothing
 }
 // =========================================================================================

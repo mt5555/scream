@@ -122,9 +122,19 @@ public:
         rrho(i,k) = inv_ggr*(pseudo_density(i,k)/dz(i,k));
         wm_zt(i,k) = -1*omega(i,k)/(rrho(i,k)*ggr);
       });
-      team.team_barrier();
+
+      // For now, we are considering dy=dx. Here, we
+      // will need to compute dx/dy instead of cell_length
+      // if we have dy!=dx.
+      cell_length(i) = sqrt(area(i));
+
+      const int num_qtracer_packs = ekat::npack<Spack>(num_qtracers);
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(team, num_qtracer_packs), [&] (const Int& q) {
+        wtracer_sfc(i,q) = 0;
+      });
 
       // Compute vertical layer heights
+      team.team_barrier();
       const auto& dz_s    = ekat::subview(dz,    i);
       const auto& z_int_s = ekat::subview(z_int, i);
       const auto& z_mid_s = ekat::subview(z_mid, i);
@@ -152,22 +162,12 @@ public:
       SHF::linear_interp(team,zt_grid_s,zi_grid_s,rrho_s,rrho_i_s,nlev,nlev+1,0);
       team.team_barrier();
 
-      // For now, we are considering dy=dx. Here, we
-      // will need to compute dx/dy instead of cell_length
-      // if we have dy!=dx.
-      cell_length(i) = sqrt(area(i));
-
       const int nlev_v = (nlev-1)/Spack::n;
       const int nlev_p = (nlev-1)%Spack::n;
       wpthlp_sfc(i) = surf_sens_flux(i)/(cpair*rrho_i(i,nlev_v)[nlev_p]);
       wprtp_sfc(i)  = surf_latent_flux(i)/rrho_i(i,nlev_v)[nlev_p];
       upwp_sfc(i)   = surf_mom_flux(i,0)/rrho_i(i,nlev_v)[nlev_p];
       vpwp_sfc(i)   = surf_mom_flux(i,1)/rrho_i(i,nlev_v)[nlev_p];
-
-      const int num_qtracer_packs = ekat::npack<Spack>(num_qtracers);
-      Kokkos::parallel_for(Kokkos::TeamThreadRange(team, num_qtracer_packs), [&] (const Int& q) {
-        wtracer_sfc(i,q) = 0;
-      });
     } // operator
 
     // Local variables
@@ -435,6 +435,13 @@ protected:
   // Structures which compute pre/post process
   SHOCPreprocess shoc_preprocess;
   SHOCPostprocess shoc_postprocess;
+
+private:
+
+  Timer timer;
+  std::vector<double> pre_proc_times,wsm_times,shoc_main_times,post_proc_times;
+
+
 }; // class SHOCMacrophysics
 
 } // namespace scream
