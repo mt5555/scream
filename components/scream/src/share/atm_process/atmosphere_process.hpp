@@ -337,7 +337,32 @@ protected:
   // Parameter list
   ekat::ParameterList m_params;
 
+  // Timing struct
+  struct Timer {
+    std::chrono::time_point<std::chrono::steady_clock> start, finish;
+
+    void start_timer() { start = std::chrono::steady_clock::now(); }
+    void stop_timer() { finish = std::chrono::steady_clock::now(); }
+
+    double report_time(const std::string title, ekat::Comm comm, const bool output_each_iteration=false/*, const int ncols*/) {
+      auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+      const double report_time = 1e-6*duration.count();
+      //const double thousand_cols_per_sec = (ncols/1000.0)/report_time;
+
+      if (output_each_iteration) {
+        std::cout << title
+                  << ": time-rank-" << comm.rank() << ": " << report_time
+                  //<< " : thousand-cols-per-sec: " << thousand_cols_per_sec
+                  << std::endl;
+      }
+      return report_time;
+    }
+  };
+  Timer timer_all, timer_sub;
+  std::vector<double> total_time,run_time,check_time,stamp_time;
+
 private:
+
   // Called from initialize, this method creates the m_[fields|groups]_[in|out]_pointers
   // maps, which are used inside the get_[field|group]_[in|out] methods.
   void set_fields_and_groups_pointers ();

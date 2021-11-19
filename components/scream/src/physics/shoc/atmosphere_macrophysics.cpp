@@ -347,6 +347,12 @@ void SHOCMacrophysics::initialize_impl ()
                                  cldfrac_liq,sgs_buoy_flux,inv_qc_relvar,
                                  T_mid, dse, z_mid, phis);
 
+  // Calculate maximum number of levels in pbl from surface
+  const auto pref_mid = get_field_in("pref_mid").get_view<const Spack*>();
+  const int ntop_shoc = 0;
+  const int nbot_shoc = m_num_levs;
+  m_npbl = SHF::shoc_init(nbot_shoc,ntop_shoc,pref_mid);
+
   // Set field property checks for the fields in this process
   auto T_interval_check = std::make_shared<FieldWithinIntervalCheck<Real> >(150, 500);
   auto positivity_check = std::make_shared<FieldPositivityCheck<Real> >();
@@ -363,19 +369,15 @@ void SHOCMacrophysics::run_impl (const int dt)
   const auto scan_policy    = ekat::ExeSpaceUtils<KT::ExeSpace>::get_thread_range_parallel_scan_team_policy(m_num_cols, nlev_packs);
   const auto default_policy = ekat::ExeSpaceUtils<KT::ExeSpace>::get_default_team_policy(m_num_cols, nlev_packs);
 
+  timer.start_timer();
   // Preprocessing of SHOC inputs. Kernel contains a parallel_scan,
   // so a special TeamPolicy is required.
   Kokkos::parallel_for("shoc_preprocess",
                        scan_policy,
                        shoc_preprocess);
   Kokkos::fence();
-
-
-  // Calculate maximum number of levels in pbl from surface
-  const auto pref_mid = get_field_in("pref_mid").get_view<const Spack*>();
-  const int ntop_shoc = 0;
-  const int nbot_shoc = m_num_levs;
-  m_npbl = SHF::shoc_init(nbot_shoc,ntop_shoc,pref_mid);
+  timer.stop_timer();
+  pre_proc_times.push_back(timer.report_time("pre",get_comm()));
 
   // For now set the host timestep to the shoc timestep. This forces
   // number of SHOC timesteps (nadv) to be 1.
@@ -383,24 +385,56 @@ void SHOCMacrophysics::run_impl (const int dt)
   hdtime = dt;
   m_nadv = std::max(hdtime/dt,1);
 
+  timer.start_timer();
   // WorkspaceManager for internal local variables
   const int n_wind_slots = ekat::npack<Spack>(2)*Spack::n;
   const int n_trac_slots = ekat::npack<Spack>(m_num_tracers+3)*Spack::n;
   ekat::WorkspaceManager<Spack, KT::Device> workspace_mgr(m_buffer.wsm_data, nlevi_packs, 13+(n_wind_slots+n_trac_slots), default_policy);
+  timer.stop_timer();
+  wsm_times.push_back(timer.report_time("wsm",get_comm()));
 
+  timer.start_timer();
   // Run shoc main
   SHF::shoc_main(m_num_cols, m_num_levs, m_num_levs+1, m_npbl, m_nadv, m_num_tracers, dt,
                  workspace_mgr,input,input_output,output,history_output);
+  timer.stop_timer();
+  shoc_main_times.push_back(timer.report_time("shoc_main",get_comm()));
 
+  timer.start_timer();
   // Postprocessing of SHOC outputs
   Kokkos::parallel_for("shoc_postprocess",
                        default_policy,
                        shoc_postprocess);
   Kokkos::fence();
+  timer.stop_timer();
+  post_proc_times.push_back(timer.report_time("post",get_comm()));
 }
 // =========================================================================================
 void SHOCMacrophysics::finalize_impl()
 {
+  EKAT_ASSERT_MSG(wsm_times.size() == shoc_main_times.size(), "Error!: time: main sizes are consistent.");
+  EKAT_ASSERT_MSG(wsm_times.size() == pre_proc_times.size(), "Error!: time: pre sizes are consistent.");
+
+  double total_pre_time(0), total_wsm_time(0), total_shoc_main_time(0), total_post_time(0);
+    for (int r=0; r<shoc_main_times.size(); ++r) {
+    total_pre_time += pre_proc_times[r];
+    total_wsm_time += wsm_times[r];
+    total_shoc_main_time += shoc_main_times[r];
+    total_post_time += post_proc_times[r];
+  }
+
+  double max_pre, max_wsm, max_shoc_main, max_post;
+  get_comm().all_reduce(&total_pre_time,&max_pre,1,MPI_MAX);
+  get_comm().all_reduce(&total_wsm_time,&max_wsm,1,MPI_MAX);
+  get_comm().all_reduce(&total_shoc_main_time,&max_shoc_main,1,MPI_MAX);
+  get_comm().all_reduce(&total_post_time,&max_post,1,MPI_MAX);
+
+  if (get_comm().am_i_root()) {
+      std::cout << "     preproc-time: " << max_pre << std::endl
+                << "     wsm-time: " << max_wsm << std::endl
+                << "     shocmain-time: " << max_shoc_main << std::endl
+                << "     postproc-time: " << max_post << std::endl;
+  }
   // Do nothing
 }
 // =========================================================================================

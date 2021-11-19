@@ -14,27 +14,74 @@ AtmosphereProcess::AtmosphereProcess (const ekat::Comm& comm, const ekat::Parame
 {}
 
 void AtmosphereProcess::initialize (const TimeStamp& t0) {
+  timer_all.start_timer();
+
   set_fields_and_groups_pointers();
   m_time_stamp = t0;
   initialize_impl();
+
+  timer_all.stop_timer();
+  timer_all.report_time(name()+"-initialize",get_comm(),true);
 }
 
 void AtmosphereProcess::run (const int dt) {
-  // Make sure required fields are valid
-  check_required_fields();
+  timer_all.start_timer();
 
+//  timer_sub.start_timer();
+//  // Make sure required fields are valid
+//  check_required_fields();
+//  timer_sub.stop_timer();
+//  const double temp_check_time = timer_sub.report_time(name()+"-reqcheck",get_comm());
+
+  //timer_sub.start_timer();
   // Let the derived class do the actual run
   run_impl(dt);
+  //timer_sub.stop_timer();
+  //run_time.push_back(timer_sub.report_time(name()+"-run",get_comm()));
 
-  // Make sure computed fields are valid
-  check_computed_fields();
+//  timer_sub.start_timer();
+//  // Make sure computed fields are valid
+//  check_computed_fields();
+//  timer_sub.stop_timer();
+//  check_time.push_back(temp_check_time+timer_sub.report_time(name()+"-compcheck",get_comm()));
 
   // Update all output fields time stamps
+  //timer_sub.start_timer();
   m_time_stamp += dt;
   update_time_stamps ();
+  //timer_sub.stop_timer();
+  //stamp_time.push_back(timer_sub.report_time(name()+"-stamp",get_comm()));
+
+
+  timer_all.stop_timer();
+  total_time.push_back(timer_all.report_time(name()+"-run",get_comm(),false));
 }
 
 void AtmosphereProcess::finalize (/* what inputs? */) {
+
+//  EKAT_ASSERT(total_time.size() == check_time.size());
+//  EKAT_ASSERT(total_time.size() == run_time.size());
+  double time_total(0), time_check(0), time_run(0), time_stamp(0);
+  for (int r=0; r<total_time.size(); ++r) {
+    time_total += total_time[r];
+//    time_check += check_time[r];
+//    time_run += run_time[r];
+//    time_stamp += stamp_time[r];
+  }
+
+  double max_total, max_check, max_run, max_stamp;
+  get_comm().all_reduce(&time_total,&max_total,1,MPI_MAX);
+  //get_comm().all_reduce(&time_check,&max_check,1,MPI_MAX);
+  //get_comm().all_reduce(&time_run,&max_run,1,MPI_MAX);
+  //get_comm().all_reduce(&time_stamp,&max_stamp,1,MPI_MAX);
+
+  if (get_comm().am_i_root()) {
+      std::cout << name()+"-run-time: " << max_total << std::endl;
+                //<< "     check-time: " << max_check << std::endl
+                //<< "     run-time: " << max_run << std::endl
+               // << "     stamp-time: " << max_stamp << std::endl;
+  }
+
   finalize_impl(/* what inputs? */);
 }
 
