@@ -291,9 +291,9 @@ void P3Microphysics::finalize_impl()
   get_comm().all_reduce(&total_wsm_time,&max_wsm,1,MPI_MAX);
 
   if (get_comm().am_i_root()) {
-      std::cout << name()+"-run-time: runimpl: " << max_run
-                << " : wsm: " << max_wsm
-                << " : p3main: " << max_p3_main
+      std::cout << name()+"-run-time: runimpl-time: " << max_run
+                << " : wsm-time: " << max_wsm
+                << " : p3main-time: " << max_p3_main
                 << std::endl;
   }
   // Do nothing
