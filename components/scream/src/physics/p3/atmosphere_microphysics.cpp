@@ -275,7 +275,6 @@ void P3Microphysics::initialize_impl ()
 // =========================================================================================
 void P3Microphysics::finalize_impl()
 {
-  std::cout << "P3-time:size: " << p3_main_times.size() << std::endl;
   double total_p3_main_time(0);
     for (int r=0; r<p3_main_times.size(); ++r) {
     total_p3_main_time += p3_main_times[r];
@@ -285,7 +284,7 @@ void P3Microphysics::finalize_impl()
   get_comm().all_reduce(&total_p3_main_time,&max_p3_main,1,MPI_MAX);
 
   if (get_comm().am_i_root()) {
-      std::cout << "     shocmain-time: " << max_p3_main << std::endl;
+      std::cout << "     p3_main-time: " << max_p3_main << std::endl;
   }
 
   // Do nothing
