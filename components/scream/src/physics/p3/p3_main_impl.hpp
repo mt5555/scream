@@ -113,11 +113,12 @@ Int Functions<S,D>
   auto start = std::chrono::steady_clock::now();
 
 
-
+  view_1d<double> timings0("timings0", nj);
   view_1d<double> timings1("timings1", nj);
   view_1d<double> timings2("timings2", nj);
   view_1d<double> timings3("timings3", nj);
   view_1d<double> timings4("timings4", nj);
+  view_1d<double> timings5("timings5", nj);
 
 
   // p3_main loop
@@ -127,6 +128,9 @@ Int Functions<S,D>
     KOKKOS_LAMBDA(const MemberType& team) {
 
     const Int i = team.league_rank();
+
+          {
+            auto start = std::chrono::steady_clock::now();
 
     auto workspace = workspace_mgr.get_workspace(team);
 
@@ -307,6 +311,12 @@ Int Functions<S,D>
 
     // Cloud sedimentation:  (adaptive substepping)
 
+            auto finish = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+
+            timings0(i) = 1e-6*duration.count();
+            }
+
 
           {
             auto start = std::chrono::steady_clock::now();
@@ -381,6 +391,9 @@ Int Functions<S,D>
     // and compute diagnostic fields for output
     //
 
+          {
+            auto start = std::chrono::steady_clock::now();
+
 
 
     p3_main_part3(
@@ -391,6 +404,12 @@ Int Functions<S,D>
       orho_qi, diag_equiv_reflectivity, odiag_eff_radius_qc);
 
 
+
+            auto finish = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+
+            timings5(i) = 1e-6*duration.count();
+            }
 
     //
     // merge ice categories with similar properties
@@ -421,15 +440,19 @@ Int Functions<S,D>
   double max_time3 = 0;
   double max_time4 = 0;
   for (int i=0; i<nj; ++i) {
+    if (timings0(i) > max_time0) max_time0 = timings0(i);
     if (timings1(i) > max_time1) max_time1 = timings1(i);
     if (timings2(i) > max_time2) max_time2 = timings2(i);
     if (timings3(i) > max_time3) max_time3 = timings3(i);
     if (timings4(i) > max_time4) max_time4 = timings4(i);
+    if (timings5(i) > max_time5) max_time5 = timings5(i);
   }
-  std::cout << "       max_time1: " << max_time1
+  std::cout << "       max_time0: " << max_time0
+            << ", max_time1: " << max_time2
             << ", max_time2: " << max_time2
             << ", max_time3: " << max_time3
             << ", max_time4: " << max_time4
+            << ", max_time5: " << max_time5
             << ", total: " << 1e-6*duration.count() << std::endl;
 
   return duration.count();
