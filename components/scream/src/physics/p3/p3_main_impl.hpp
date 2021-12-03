@@ -435,10 +435,12 @@ Int Functions<S,D>
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
 
 // TIMINGS STUFF
+  double max_time0 = 0;
   double max_time1 = 0;
   double max_time2 = 0;
   double max_time3 = 0;
   double max_time4 = 0;
+  double max_time5 = 0;
   for (int i=0; i<nj; ++i) {
     if (timings0(i) > max_time0) max_time0 = timings0(i);
     if (timings1(i) > max_time1) max_time1 = timings1(i);
