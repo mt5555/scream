@@ -275,15 +275,18 @@ void P3Microphysics::initialize_impl ()
 // =========================================================================================
 void P3Microphysics::finalize_impl()
 {
-  double total_p3_main_time(0);
+  double total_p3_main_time(0), total_wsm_time(0);
     for (int r=0; r<p3_main_times.size(); ++r) {
     total_p3_main_time += p3_main_times[r];
+    total_wsm_time += wsm_times[r];
   }
 
-  double max_p3_main;
+  double max_p3_main, max_wsm;
   get_comm().all_reduce(&total_p3_main_time,&max_p3_main,1,MPI_MAX);
+  get_comm().all_reduce(&total_wsm_time,&max_wsm,1,MPI_MAX);
 
   if (get_comm().am_i_root()) {
+      std::cout << "     wsm-time: " << max_wsm << std::endl;
       std::cout << "     p3_main-time: " << max_p3_main << std::endl;
   }
 
