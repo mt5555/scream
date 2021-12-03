@@ -319,7 +319,7 @@ Int Functions<S,D>
 
 
           {
-            auto start = std::chrono::steady_clock::now();
+            start = std::chrono::steady_clock::now();
 
     cloud_sedimentation(
       qc_incld, rho, inv_rho, ocld_frac_l, acn, inv_dz, dnu, team, workspace,
@@ -327,8 +327,8 @@ Int Functions<S,D>
       oqc, onc, nc_incld, mu_c, lamc, qtend_ignore, ntend_ignore,
       diagnostic_outputs.precip_liq_surf(i));
 
-          auto finish = std::chrono::steady_clock::now();
-          auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+          finish = std::chrono::steady_clock::now();
+          duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
 
           timings1(i) = 1e-6*duration.count();
           }
@@ -336,7 +336,7 @@ Int Functions<S,D>
 
 
           {
-            auto start = std::chrono::steady_clock::now();
+            start = std::chrono::steady_clock::now();
 
     // Rain sedimentation:  (adaptive substepping)
     rain_sedimentation(
@@ -345,15 +345,15 @@ Int Functions<S,D>
       onr, nr_incld, mu_r, lamr, oprecip_liq_flux, qtend_ignore, ntend_ignore,
       diagnostic_outputs.precip_liq_surf(i));
 
-          auto finish = std::chrono::steady_clock::now();
-          auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+          finish = std::chrono::steady_clock::now();
+          duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
 
           timings2(i) = 1e-6*duration.count();
           }
 
 
           {
-            auto start = std::chrono::steady_clock::now();
+            start = std::chrono::steady_clock::now();
 
     // Ice sedimentation:  (adaptive substepping)
     ice_sedimentation(
@@ -362,23 +362,23 @@ Int Functions<S,D>
       oqm, qm_incld, obm, bm_incld, qtend_ignore, ntend_ignore,
       ice_table_vals, diagnostic_outputs.precip_ice_surf(i));
 
-            auto finish = std::chrono::steady_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+            finish = std::chrono::steady_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
 
             timings3(i) = 1e-6*duration.count();
             }
 
 
           {
-            auto start = std::chrono::steady_clock::now();
+            start = std::chrono::steady_clock::now();
 
     // homogeneous freezing of cloud and rain
     homogeneous_freezing(
       T_atm, oinv_exner, olatent_heat_fusion, team, nk, ktop, kbot, kdir, oqc, onc, oqr, onr, oqi,
       oni, oqm, obm, oth);
 
-            auto finish = std::chrono::steady_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+            finish = std::chrono::steady_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
 
             timings4(i) = 1e-6*duration.count();
             }
@@ -392,7 +392,7 @@ Int Functions<S,D>
     //
 
           {
-            auto start = std::chrono::steady_clock::now();
+            start = std::chrono::steady_clock::now();
 
 
 
@@ -405,8 +405,8 @@ Int Functions<S,D>
 
 
 
-            auto finish = std::chrono::steady_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+            finish = std::chrono::steady_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
 
             timings5(i) = 1e-6*duration.count();
             }
@@ -450,7 +450,7 @@ Int Functions<S,D>
     if (timings5(i) > max_time5) max_time5 = timings5(i);
   }
   std::cout << "       max_time0: " << max_time0
-            << ", max_time1: " << max_time2
+            << ", max_time1: " << max_time1
             << ", max_time2: " << max_time2
             << ", max_time3: " << max_time3
             << ", max_time4: " << max_time4
