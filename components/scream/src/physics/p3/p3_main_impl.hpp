@@ -112,6 +112,14 @@ Int Functions<S,D>
   // we do not want to measure init stuff
   auto start = std::chrono::steady_clock::now();
 
+
+
+  view_1d<double> timings1("timings1", nj);
+  view_1d<double> timings2("timings2", nj);
+  view_1d<double> timings3("timings3", nj);
+  view_1d<double> timings4("timings4", nj);
+
+
   // p3_main loop
   Kokkos::parallel_for(
     "p3 main loop",
@@ -222,6 +230,10 @@ Int Functions<S,D>
       &mu_c, &lamc, &orho_qi, &oqv2qi_depos_tend, &precip_total_tend, &nevapr, &oprecip_liq_flux, &oprecip_ice_flux
     };
 
+
+
+
+
     // initialize
     p3_main_init(
       team, nk_pack,
@@ -229,6 +241,12 @@ Int Functions<S,D>
       ze_ice, ze_rain, odiag_eff_radius_qc, odiag_eff_radius_qi, inv_cld_frac_i, inv_cld_frac_l,
       inv_cld_frac_r, exner, T_atm, oqv, inv_dz,
       diagnostic_outputs.precip_liq_surf(i), diagnostic_outputs.precip_ice_surf(i), zero_init);
+
+
+
+
+
+
 
     p3_main_part1(
       team, nk, infrastructure.predictNc, infrastructure.prescribedCCN, infrastructure.dt,
@@ -239,6 +257,11 @@ Int Functions<S,D>
       obm, qc_incld, qr_incld, qi_incld, qm_incld, nc_incld, nr_incld,
       ni_incld, bm_incld, nucleationPossible, hydrometeorsPresent);
 
+
+
+
+
+
     // There might not be any work to do for this team
     if (!(nucleationPossible || hydrometeorsPresent)) {
       return; // this is how you do a "continue" in a kokkos lambda
@@ -246,6 +269,10 @@ Int Functions<S,D>
 
     // ------------------------------------------------------------------------------------------
     // main k-loop (for processes):
+
+
+
+
 
     p3_main_part2(
       team, nk_pack, infrastructure.predictNc, infrastructure.prescribedCCN, infrastructure.dt, inv_dt,
@@ -258,6 +285,12 @@ Int Functions<S,D>
       mu_r, lamr, logn0r, oqv2qi_depos_tend, precip_total_tend, nevapr, qr_evap_tend,
       ovap_liq_exchange, ovap_ice_exchange, oliq_ice_exchange,
       pratot, prctot, hydrometeorsPresent, nk);
+
+
+
+
+
+
 
     //NOTE: At this point, it is possible to have negative (but small) nc, nr, ni.  This is not
     //      a problem; those values get clipped to zero in the sedimentation section (if necessary).
@@ -274,11 +307,26 @@ Int Functions<S,D>
 
     // Cloud sedimentation:  (adaptive substepping)
 
+
+          {
+            auto start = std::chrono::steady_clock::now();
+
     cloud_sedimentation(
       qc_incld, rho, inv_rho, ocld_frac_l, acn, inv_dz, dnu, team, workspace,
       nk, ktop, kbot, kdir, infrastructure.dt, inv_dt, infrastructure.predictNc,
       oqc, onc, nc_incld, mu_c, lamc, qtend_ignore, ntend_ignore,
       diagnostic_outputs.precip_liq_surf(i));
+
+          auto finish = std::chrono::steady_clock::now();
+          auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+
+          timings1(i) = 1e-6*duration.count();
+          }
+
+
+
+          {
+            auto start = std::chrono::steady_clock::now();
 
     // Rain sedimentation:  (adaptive substepping)
     rain_sedimentation(
@@ -287,6 +335,16 @@ Int Functions<S,D>
       onr, nr_incld, mu_r, lamr, oprecip_liq_flux, qtend_ignore, ntend_ignore,
       diagnostic_outputs.precip_liq_surf(i));
 
+          auto finish = std::chrono::steady_clock::now();
+          auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+
+          timings2(i) = 1e-6*duration.count();
+          }
+
+
+          {
+            auto start = std::chrono::steady_clock::now();
+
     // Ice sedimentation:  (adaptive substepping)
     ice_sedimentation(
       rho, inv_rho, rhofaci, ocld_frac_i, inv_dz, team, workspace, nk, ktop, kbot,
@@ -294,21 +352,45 @@ Int Functions<S,D>
       oqm, qm_incld, obm, bm_incld, qtend_ignore, ntend_ignore,
       ice_table_vals, diagnostic_outputs.precip_ice_surf(i));
 
+            auto finish = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+
+            timings3(i) = 1e-6*duration.count();
+            }
+
+
+          {
+            auto start = std::chrono::steady_clock::now();
+
     // homogeneous freezing of cloud and rain
     homogeneous_freezing(
       T_atm, oinv_exner, olatent_heat_fusion, team, nk, ktop, kbot, kdir, oqc, onc, oqr, onr, oqi,
       oni, oqm, obm, oth);
 
+            auto finish = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+
+            timings4(i) = 1e-6*duration.count();
+            }
+
+
+
+
     //
     // final checks to ensure consistency of mass/number
     // and compute diagnostic fields for output
     //
+
+
+
     p3_main_part3(
       team, nk_pack, dnu, ice_table_vals, oinv_exner, ocld_frac_l, ocld_frac_r, ocld_frac_i,
       rho, inv_rho, rhofaci, oqv, oth, oqc, onc, oqr, onr, oqi, oni,
       oqm, obm, olatent_heat_vapor, olatent_heat_sublim, mu_c, nu, lamc, mu_r, lamr,
       ovap_liq_exchange, ze_rain, ze_ice, diag_vm_qi, odiag_eff_radius_qi, diag_diam_qi,
       orho_qi, diag_equiv_reflectivity, odiag_eff_radius_qc);
+
+
 
     //
     // merge ice categories with similar properties
@@ -332,6 +414,24 @@ Int Functions<S,D>
 
   auto finish = std::chrono::steady_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
+
+// TIMINGS STUFF
+  double max_time1 = 0;
+  double max_time2 = 0;
+  double max_time3 = 0;
+  double max_time4 = 0;
+  for (int i=0; i<nj; ++i) {
+    if (timings1(i) > max_time1) max_time1 = timings1(i);
+    if (timings2(i) > max_time2) max_time2 = timings2(i);
+    if (timings3(i) > max_time3) max_time3 = timings3(i);
+    if (timings4(i) > max_time4) max_time4 = timings4(i);
+  }
+  std::cout << "       max_time1: " << max_time1
+            << ", max_time2: " << max_time2
+            << ", max_time3: " << max_time3
+            << ", max_time4: " << max_time4
+            << ", total: " << 1e-6*duration.count() << std::endl;
+
   return duration.count();
 }
 
