@@ -83,7 +83,7 @@ void Functions<S,D>
     // find bottom
     Int k_qxbot = find_bottom(team, sqr, qsmall, kbot, k_qxtop, kdir, log_qxpresent);
 
-    std::cout << "LOOP-rain range: " << k_qxtop << "    " << k_qxbot << std::endl;
+    //std::cout << "LOOP-rain range: " << k_qxtop << "    " << k_qxbot << std::endl;
 
 
     while (dt_left > C::dt_left_tol) {
