@@ -112,6 +112,8 @@ void Functions<S,D>
     // find bottom
     Int k_qxbot = find_bottom(team, sqi, qsmall, kbot, k_qxtop, kdir, log_qxpresent);
 
+    std::cout << "LOOP-ice range: " << k_qxtop << "    " << k_qxbot << std::endl;
+
     while (dt_left > C::dt_left_tol) {
       Scalar Co_max = 0.0;
       Int kmin, kmax;
