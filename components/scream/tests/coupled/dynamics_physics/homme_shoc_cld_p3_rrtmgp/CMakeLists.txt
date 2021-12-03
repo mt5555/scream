@@ -15,7 +15,7 @@ CreateUnitTest(homme_shoc_cld_p3_rrtmgp "homme_shoc_cld_p3_rrtmgp.cpp" "${NEED_L
 
 # Set AD configurable options
 set (ATM_TIME_STEP 1800)
-SetVarDependingOnTestProfile(NUM_STEPS 25 25 25)  # 1h 2h 24h
+SetVarDependingOnTestProfile(NUM_STEPS 30 30 30)  # 1h 2h 24h
 
 ## Copy (and configure) yaml files needed by tests
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/input.yaml
@@ -25,7 +25,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/homme_shoc_cld_p3_rrtmgp_output.yaml
 
 # Set homme's test options, so that we can configure the namelist correctly
 # Discretization/algorithm settings
-set (HOMME_TEST_NE 4)
+set (HOMME_TEST_NE 30)
 set (HOMME_TEST_LIM 9)
 set (HOMME_TEST_REMAP_FACTOR 3)
 set (HOMME_TEST_TRACERS_FACTOR 1)
@@ -56,8 +56,8 @@ configure_file(${SCREAM_SOURCE_DIR}/src/dynamics/homme/tests/theta.nl
                ${CMAKE_CURRENT_BINARY_DIR}/namelist.nl)
 
 # Copy initial conditions files
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne4np4.nc
-               ${CMAKE_CURRENT_BINARY_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne4np4.nc COPYONLY)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne30np4_L128_aqua.nc
+               ${CMAKE_CURRENT_BINARY_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne30np4_L128_aqua.nc COPYONLY)
 
 # Create vcoord directory
 file (MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcoord)

@@ -11,7 +11,7 @@ Time Stepping:
 
 Initial Conditions:
   Physics GLL:
-    Filename: homme_shoc_cld_p3_rrtmgp_init_ne4np4.nc
+    Filename: homme_shoc_cld_p3_rrtmgp_init_ne30np4_L128_aqua.nc
     # Set X_prev = X
     T_mid_prev: T_mid
     horiz_winds_prev: horiz_winds
@@ -48,6 +48,6 @@ Grids Manager:
     Dynamics Namelist File Name: namelist.nl
 
 # The parameters for I/O control
-Scorpio:
-  Output YAML Files: ["homme_shoc_cld_p3_rrtmgp_output.yaml"]
+#Scorpio:
+#  Output YAML Files: ["homme_shoc_cld_p3_rrtmgp_output.yaml"]
 ...
