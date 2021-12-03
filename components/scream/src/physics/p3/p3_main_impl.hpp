@@ -129,7 +129,7 @@ Int Functions<S,D>
 
     const Int i = team.league_rank();
 
-          {
+
             auto start = std::chrono::steady_clock::now();
 
     auto workspace = workspace_mgr.get_workspace(team);
@@ -315,7 +315,7 @@ Int Functions<S,D>
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish - start);
 
             timings0(i) = 1e-6*duration.count();
-            }
+
 
 
           {
