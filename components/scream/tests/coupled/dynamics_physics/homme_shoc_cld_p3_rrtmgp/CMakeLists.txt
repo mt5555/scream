@@ -2,7 +2,7 @@ include (ScreamUtils)
 
 # Get or create the dynamics lib
 #                 HOMME_TARGET   NP PLEV QSIZE_D
-CreateDynamicsLib("theta-l_kokkos"  4   72   35)
+CreateDynamicsLib("theta-l_kokkos"  4   128   35)
 
 # Create the test
 SET (TEST_LABELS "dynamics;driver;shoc;cld;p3;rrtmgp;physics")
@@ -15,7 +15,7 @@ CreateUnitTest(homme_shoc_cld_p3_rrtmgp "homme_shoc_cld_p3_rrtmgp.cpp" "${NEED_L
 
 # Set AD configurable options
 set (ATM_TIME_STEP 1800)
-SetVarDependingOnTestProfile(NUM_STEPS 25 25 25)  # 1h 2h 24h
+SetVarDependingOnTestProfile(NUM_STEPS 30 30 30)  # 1h 2h 24h
 
 ## Copy (and configure) yaml files needed by tests
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/input.yaml
@@ -48,24 +48,24 @@ set (HOMME_TEST_MOISTURE notdry)
 SET (HOMME_THETA_HY_MODE true)
 
 # Vert coord settings
-set (HOMME_TEST_VCOORD_INT_FILE acme-72i.ascii)
-set (HOMME_TEST_VCOORD_MID_FILE acme-72m.ascii)
+set (HOMME_TEST_VCOORD_INT_FILE scream-128i.ascii)
+set (HOMME_TEST_VCOORD_MID_FILE scream-128m.ascii)
 
 # Configure the namelist into the test directory
 configure_file(${SCREAM_SOURCE_DIR}/src/dynamics/homme/tests/theta.nl
                ${CMAKE_CURRENT_BINARY_DIR}/namelist.nl)
 
 # Copy initial conditions files
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne4np4.nc
-               ${CMAKE_CURRENT_BINARY_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne4np4.nc COPYONLY)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne4np4_L128_aqua.nc
+               ${CMAKE_CURRENT_BINARY_DIR}/homme_shoc_cld_p3_rrtmgp_init_ne4np4_L128_aqua.nc COPYONLY)
 
 # Create vcoord directory
 file (MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcoord)
 
 # Copy vcoord files to build dir
-configure_file(${HOMME_SOURCE_DIR}/test/vcoord/acme-72i.ascii
+configure_file(${HOMME_SOURCE_DIR}/test/vcoord/scream-128i.ascii
                ${CMAKE_CURRENT_BINARY_DIR}/vcoord COPYONLY)
-configure_file(${HOMME_SOURCE_DIR}/test/vcoord/acme-72m.ascii
+configure_file(${HOMME_SOURCE_DIR}/test/vcoord/scream-128m.ascii
                ${CMAKE_CURRENT_BINARY_DIR}/vcoord COPYONLY)
 
 # P3 data files

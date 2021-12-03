@@ -265,7 +265,7 @@ protected:
   // infrastructure.it is passed as an arguement to p3_main and is used for identifying which iteration an error occurs.
 
   Timer timer;
-  std::vector<double> p3_main_times;
+  std::vector<double> p3_main_times, wsm_times;
 
 }; // class P3Microphysics
 

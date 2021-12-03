@@ -17,10 +17,13 @@ void P3Microphysics::run_impl (const int dt)
   infrastructure.dt = dt;
   infrastructure.it++;
 
+  timer.start();
   // WorkspaceManager for internal local variables
   const Int nk_pack = ekat::npack<Spack>(m_num_levs);
   const auto policy = ekat::ExeSpaceUtils<KT::ExeSpace>::get_default_team_policy(m_num_cols, nk_pack);
   ekat::WorkspaceManager<Spack, KT::Device> workspace_mgr(m_buffer.wsm_data, nk_pack, 52, policy);
+  timer.stop_timer();
+  wsm_times.push_back(timer.report_time("      wsm-time:",get_comm()));
 
   timer.start_timer();
   // Run p3 main
