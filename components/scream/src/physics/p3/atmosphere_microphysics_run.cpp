@@ -30,7 +30,7 @@ void P3Microphysics::run_impl (const int dt)
   P3F::p3_main(prog_state, diag_inputs, diag_outputs, infrastructure,
                history_only, workspace_mgr, m_num_cols, m_num_levs);
   timer.stop_timer();
-  p3_main_times.push_back(timer.report_time("      p3_main-time:",get_comm(), true));
+  p3_main_times.push_back(timer.report_time("      p3_main-time:",get_comm()));
 
   // Conduct the post-processing of the p3_main output.
   Kokkos::parallel_for(
