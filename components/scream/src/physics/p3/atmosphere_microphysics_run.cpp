@@ -17,7 +17,7 @@ void P3Microphysics::run_impl (const int dt)
   infrastructure.dt = dt;
   infrastructure.it++;
 
-  timer.start();
+  timer.start_timer();
   // WorkspaceManager for internal local variables
   const Int nk_pack = ekat::npack<Spack>(m_num_levs);
   const auto policy = ekat::ExeSpaceUtils<KT::ExeSpace>::get_default_team_policy(m_num_cols, nk_pack);
